@@ -1,0 +1,15 @@
+*.iml
+.gradle/
+.kotlin/
+.idea/
+local.properties
+build/
+captures/
+.externalNativeBuild/
+.cxx/
+.tooling/
+.android-sdk/
+app/build/
+google-services.json
+qa-*.png
+qa-*.xml
