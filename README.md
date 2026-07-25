@@ -4,6 +4,8 @@ PulsePlan is an Android workout planner built with Kotlin and Jetpack Compose.
 It creates a daily plan from a user's goal, experience, workout personality,
 equipment, schedule, and preferred session length.
 
+**[View Ahsan Rehmat's portfolio](https://ahsanrehmat1.github.io)**
+
 ![PulsePlan sign-in screen](docs/images/pulseplan-auth.png)
 
 New to the project? Start with the plain-language
