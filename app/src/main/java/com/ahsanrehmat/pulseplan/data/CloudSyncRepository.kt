@@ -39,6 +39,8 @@ interface CloudSyncRepository {
         date: LocalDate,
         day: CloudDaySnapshot,
     )
+
+    suspend fun deleteAccountData(accountId: String)
 }
 
 class FirebaseCloudSyncRepository(context: Context) : CloudSyncRepository {
@@ -139,6 +141,28 @@ class FirebaseCloudSyncRepository(context: Context) : CloudSyncRepository {
             .awaitResult()
     }
 
+    override suspend fun deleteAccountData(accountId: String) {
+        val database = requireNotNull(firestore) { "Cloud sync is not configured." }
+        val userDocument = database.collection(USERS_COLLECTION).document(accountId)
+        val daysCollection = userDocument.collection(DAYS_COLLECTION)
+
+        while (true) {
+            val dayDocuments = daysCollection
+                .limit(DELETE_BATCH_SIZE)
+                .get()
+                .awaitResult()
+            if (dayDocuments.isEmpty) break
+
+            database.runBatch { batch ->
+                dayDocuments.documents.forEach { document ->
+                    batch.delete(document.reference)
+                }
+            }.awaitResult()
+        }
+
+        userDocument.delete().awaitResult()
+    }
+
     private fun serverWriteMetadata(): Map<String, Any> = mapOf(
         "serverUpdatedAt" to FieldValue.serverTimestamp(),
     )
@@ -159,5 +183,6 @@ class FirebaseCloudSyncRepository(context: Context) : CloudSyncRepository {
     private companion object {
         const val USERS_COLLECTION = "users"
         const val DAYS_COLLECTION = "days"
+        const val DELETE_BATCH_SIZE = 400L
     }
 }

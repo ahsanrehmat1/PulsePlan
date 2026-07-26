@@ -13,12 +13,14 @@ New to the project? Start with my plain-language
 
 ## Current vertical slice
 
-- Email/password sign-in and registration through Firebase Authentication
+- Google and email/password sign-in through Firebase Authentication
 - Password-reset email flow for returning users
+- Email verification status with send, resend, and refresh controls
+- Account & Privacy center with plain-language data-use information
+- Provider-confirmed account and data deletion
 - Timestamped offline-first Firestore sync for profiles, reminders, progress,
-  and exercise alternatives
-- Visible cloud state: syncing, up to date, local only, or setup pending
-- Safe preview mode while Firebase is not configured
+  exercise results, and exercise alternatives
+- Clear cloud-backup status
 - Personalized onboarding
 - Six structured movement preferences with automatic exercise filtering
 - Clear adjustment reasons while preserving honest completion history
@@ -28,7 +30,21 @@ New to the project? Start with my plain-language
 - Clear recovery path when Android notifications are disabled
 - Focused active-workout mode with exercise progression
 - Pauseable and skippable rest countdowns
-- Local 28-day workout history and weekly completion summary
+- Active-workout restoration after an app-process interruption
+- Set-by-set tracking with editable reps, weight, time, or distance for each set
+- Automatic between-set rest plus start, pause, resume, reset, and skip controls
+- Exercise-specific countdown timers for timed sets
+- Set totals, reps, training volume, timed work, and distance in the session summary
+- Optional result entry for reps, weight, time, distance, effort, and notes
+- Automatic personal-best detection with previous-result comparison
+- Explainable next-target suggestions based on the user's goal and recorded effort
+- One-tap use of a small reps, weight, time, or distance progression
+- Exercise-specific performance history and six-result trend charts
+- Confirmed result deletion for correcting an accidental log
+- Interactive 365-day workout calendar with per-date exercise review
+- Six-week completion trend, 28-day completion rate, and past-year totals
+- Current and best workout streaks with honest recovery-day handling
+- Progress milestones based only on recorded workout activity
 - Fair workout streaks that ignore recovery days
 - Editable plan preferences with immediate workout regeneration
 - Step-by-step guides for every generated exercise
@@ -43,26 +59,30 @@ New to the project? Start with my plain-language
 - Android Gradle Plugin 9.3.1
 - Gradle 9.6.1
 
-I do not commit secrets to this repository. Version 0.11.0 contains the account
-and cloud-sync code, but I have not yet verified live Firebase registration and
-synchronization with a real project.
+I do not commit secrets to this repository. Version 0.18.0 is connected on the
+current development machine to the Firebase project `pulseplan-503519`.
+Email/password registration, sign-out and sign-in, password-reset dispatch,
+Firestore upload, and profile restoration after clearing all local app data
+have been verified on a clean emulator. Version 0.18.0 adds Google Sign-In and
+provider-aware account deletion. A final destructive deletion test should use
+a disposable account before release.
 
-To enable real accounts, create a Firebase Android app whose package is
-`com.ahsanrehmat.pulseplan`, enable Email/Password under Firebase
+To connect another development machine or Firebase project, create a Firebase
+Android app whose package is
+`com.ahsanrehmat.pulseplan`, enable Email/Password and Google under Firebase
 Authentication, create a Cloud Firestore database, publish the checked-in
-`firestore.rules`, and add these values to the untracked `local.properties`
-file:
+`firestore.rules`, add the app's SHA-1 certificate, and add these values to the
+untracked `local.properties` file:
 
 ```properties
 sdk.dir=C\:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk
 firebase.apiKey=YOUR_WEB_API_KEY
 firebase.appId=YOUR_FIREBASE_APP_ID
 firebase.projectId=YOUR_FIREBASE_PROJECT_ID
+google.webClientId=YOUR_WEB_OAUTH_CLIENT_ID
 ```
 
-Without those Firebase values, **Preview the app** remains available so the
-onboarding and workout flow can be tested safely. Preview data stays local and
-is never uploaded under a pretend account.
+Without these values, account sign-in is unavailable.
 
 ## Build
 

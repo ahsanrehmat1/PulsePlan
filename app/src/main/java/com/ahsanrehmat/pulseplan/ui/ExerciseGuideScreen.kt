@@ -231,7 +231,7 @@ fun ExerciseGuideScreen(
                         )
                         Spacer(Modifier.width(12.dp))
                         Text(
-                            text = "This is general exercise guidance, not treatment for an injury or condition. Stop immediately if you feel pain or become unwell. Ask a qualified professional if you are unsure whether an exercise is suitable for you.",
+                            text = "General guidance only. Stop if you feel pain or unwell. Ask a qualified professional if you are unsure.",
                             color = Muted,
                             style = MaterialTheme.typography.bodyMedium,
                         )
@@ -321,7 +321,7 @@ private fun RealVideoGuideCard(exercise: Exercise) {
             }
 
             Text(
-                text = "Opens an exact video search. Compare the demonstration with the written steps and safety cues below.",
+                text = "Opens video results. Follow the steps and safety cues too.",
                 color = Muted,
                 style = MaterialTheme.typography.bodySmall,
             )

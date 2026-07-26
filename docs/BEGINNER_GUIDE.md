@@ -1,7 +1,7 @@
 # PulsePlan: start-to-finish guide
 
 This guide explains PulsePlan from the original idea to the current Android
-prototype. It is written for someone with no Android-development experience.
+app. It is written for someone with no Android-development experience.
 You do not need to memorize it. Use it as the project's map whenever something
 is unclear.
 
@@ -24,9 +24,9 @@ The three most important product areas are:
 - A clear daily workout with individual exercises and completion tracking.
 - Daily reminders and a history of the user's activity and progress.
 
-The finished product is intended to require an account and internet connection
-for cloud features. The prototype also has a safe Preview mode because Firebase
-accounts have not been connected yet.
+PulsePlan requires an account and uses the internet for cloud backup. Version
+0.18.0 supports Google and email/password accounts, cloud backup,
+email-verification controls, and account/privacy management.
 
 ## 2. Why Android, Kotlin, and Jetpack Compose
 
@@ -35,7 +35,7 @@ PulsePlan is an Android application.
 - **Kotlin** is the programming language used for the app.
 - **Android Studio** is the program used to open, edit, build, and test it.
 - **Jetpack Compose** is the system used to draw the screens and buttons.
-- **Firebase Authentication** is prepared for email/password accounts.
+- **Firebase Authentication** provides Google and email/password accounts.
 - **DataStore** currently saves the profile, dated exercise completion history,
   and the selected reminder time on the device.
 - **WorkManager** schedules the daily workout reminder.
@@ -43,22 +43,20 @@ PulsePlan is an Android application.
 Think of Android Studio as the workshop, Kotlin as the written instructions,
 and the emulator as a pretend Android phone used for testing.
 
-## 3. What we built in the first prototype
-
-The prototype is a complete path through the central idea, sometimes called a
-"vertical slice." It proves that the main experience can work before we spend
-time building every advanced feature.
+## 3. What PulsePlan includes
 
 The current flow is:
 
 ```text
 Open app
-  -> Sign in / Create account / Preview
+  -> Continue with Google / Sign in / Create account
   -> Answer onboarding questions
   -> Generate today's workout and this week's schedule
-  -> Check exercises as completed
-  -> Save the profile and dated progress
-  -> Review weekly progress, streak, and 28-day history
+  -> Log optional exercise results and check exercises as completed
+  -> Save the profile, dated progress, and active workout position
+  -> Review the calendar, trends, totals, streaks, and milestones
+  -> Review personal bests and exercise-specific result charts
+  -> Receive an optional, explained next target from the last recorded effort
   -> Update plan preferences when goals or availability change
   -> Schedule a daily reminder
 ```
@@ -66,7 +64,8 @@ Open app
 The app currently includes:
 
 - A polished sign-in and account-creation screen.
-- A Preview button for testing without Firebase.
+- An Account & Privacy screen for email verification, password reset, sign-out,
+  plain-language data use, and protected account/data deletion.
 - Seven onboarding questions.
 - Four fitness goals.
 - Three experience levels.
@@ -83,8 +82,24 @@ The app currently includes:
 - Exercise checkboxes and a progress bar.
 - A focused active-workout screen with complete and skip controls.
 - A rest countdown that can be paused, resumed, or skipped.
-- Local saving of the profile and dated completed exercises.
-- A Progress & History screen with weekly completion and 28 days of activity.
+- Separate tracking for every planned set, with an editable last set.
+- Automatic rest between sets and between exercises.
+- Start, pause, resume, and reset controls for timed exercise sets.
+- Restoration of the active exercise, current set, entered target, completed
+  sets, and timers after an app interruption.
+- A session summary for sets, reps, training volume, timed work, and distance.
+- Optional logging of reps, weight, time, distance, effort, and workout notes.
+- Previous-result comparison and automatic personal-best detection.
+- Goal-aware next-target suggestions that explain whether to progress, repeat,
+  or ease back based only on the user's recorded result and effort.
+- One-tap use of the suggested reps, weight, time, or distance target.
+- A Performance Log with exercise-specific history and six-result trend charts.
+- Confirmed deletion for correcting an accidentally logged result.
+- Local saving of the profile, dated completed exercises, and performance data.
+- A Progress Insights screen with an interactive 365-day calendar and
+  per-date exercise review.
+- A six-week completion trend, honest 28-day completion rate, past-year workout
+  and exercise totals, current and best streaks, and recorded milestones.
 - A fair workout streak that ignores recovery days and leaves today pending.
 - An editable Plan Preferences screen that rebuilds the daily and weekly plan.
 - Automatic replacement of conflicting exercises with a visible
@@ -99,30 +114,24 @@ The app currently includes:
 - A notification permission request and an editable daily reminder schedule.
 - Light and dark themes.
 
-## 4. What is not finished yet
+## 4. What remains before public release
 
-It is important to separate a working prototype from a finished public app.
-
-- Firebase values have not been added, so real account registration and
-  sign-in are not active. Preview mode is used for testing.
-- Profiles and workout data stay available locally. Cloud synchronization code
-  exists, but live cross-device sync is not verified until Firebase is
-  configured and tested.
+- Google and email/password sign-in are active through Firebase.
+- Profiles and workout data remain available locally and are backed up to
+  Firestore for signed-in users. A clean-app restore test has verified that the
+  saved profile returns after local app data is removed.
+- Email-verification and account/data-deletion clients are implemented. Use a
+  disposable Firebase account for the final destructive end-to-end deletion
+  test before release.
 - Structured movement preferences automatically filter known movement demands.
   The optional free-text note is saved for the user's reference and is not
   interpreted as a diagnosis or as an automatic medical restriction.
 - Every written guide can open an exact real-video search, but videos are not
   embedded inside PulsePlan yet. Embedded professional clips require licensed
   video content or videos recorded and owned by the app team.
-- The active session screen itself is not restored after the app process is
-  stopped, although completed exercises remain saved.
-- There are no progress charts, personal records, calendar filtering, or cloud
-  workout-history sync.
 - There are unit tests for plan generation, reminder scheduling, and workout
   session behavior, but no automated Compose UI tests yet.
 - The release build has not been prepared for the Google Play Store.
-
-These are planned improvements, not signs that the prototype failed.
 
 ## 5. How the app works internally
 
@@ -207,54 +216,68 @@ If the virtual phone is not listed:
 4. Wait until the Android home screen appears.
 5. Return to the top device dropdown and run the app.
 
-The emulator is currently the main way to preview the whole app. The project
+The emulator is the quickest way to run the whole app. The project
 does not yet contain individual `@Preview` functions for Android Studio's
 Compose Design panel.
 
 ## 8. Walking through the app as a new user
 
-Use this exact path when checking the prototype:
+Use this path when checking the app:
 
 1. Open PulsePlan.
-2. Confirm the first page says **Preview mode - Firebase setup pending**.
-3. Tap **Preview the app**.
-4. Enter a name.
-5. Choose a fitness goal.
-6. Choose Beginner, Intermediate, or Advanced.
-7. Choose the workout personality that best describes the user.
-8. Choose the available equipment.
-9. Choose realistic training days and session time.
-10. Optionally select one or more movement preferences. For a clear test,
+2. Continue with Google, or sign in with a test email account.
+3. Enter a name.
+4. Choose a fitness goal.
+5. Choose Beginner, Intermediate, or Advanced.
+6. Choose the workout personality that best describes the user.
+7. Choose the available equipment.
+8. Choose realistic training days and session time.
+9. Optionally select one or more movement preferences. For a clear test,
     select **No floor exercises**, and optionally enter a personal note.
-11. Tap **Build my first plan**.
-12. Allow notifications when Android asks.
-13. Check that the dashboard shows the chosen name, days, and session length.
+10. Tap **Build my first plan**.
+11. Allow notifications when Android asks.
+12. Check that the dashboard shows the chosen name, days, and session length.
     If a movement preference was selected, confirm conflicting exercises show
     **PLAN ADJUSTMENT**, a reason, and a disabled **Adjusted** action.
-14. Open **Plan preferences** and confirm every saved answer is already
+13. Open **Plan preferences** and confirm every saved answer is already
     selected, then use the back arrow without changing anything.
-15. Open **Progress & history** and confirm the weekly totals and recent days
-    appear, then use the back arrow.
-16. Tap **How to do it** on a dashboard exercise. Confirm its **Find video on
+14. Open **Progress insights** and confirm the weekly trend, totals, workout
+    calendar, milestones, and recent days appear. Select an earlier calendar
+    date and confirm its workout exercises and completion state are shown, then
+    use the back arrow.
+15. Tap **How to do it** on a dashboard exercise. Confirm its **Find video on
     YouTube** action, target area, equipment, three steps, coaching cue, common
     mistake, and safety note appear. Tap the video action and confirm an exact
     tutorial search opens in YouTube or the browser.
-17. Return and tap **Swap** on an unfinished exercise. Confirm its curated
+16. Return and tap **Swap** on an unfinished exercise. Confirm its curated
     alternative appears with **TODAY'S ALTERNATIVE**, **How to do it**, and
     **Restore**. Reopen the app to confirm the alternative remains, then restore
     it if this was only a test.
-18. Check one exercise. The completed count and progress bar should
+17. Check one exercise. The completed count and progress bar should
     change.
-19. Start the focused workout, open **How to do it**, return, and confirm the
-    same exercise remains active. Then test complete, skip, pause, and resume.
-20. Open **Progress & history** again and confirm today's entry updated.
-21. Return to **Plan preferences**, change one preference, save, and confirm the
+18. Start the set-by-set workout, open **How to do it**, return, and confirm the
+    same exercise and set remain active. Confirm the planned target is already
+    filled, adjust it if needed, choose an effort, add a short note, and tap
+    **Complete set 1**. Confirm the automatic rest screen identifies set 2.
+    Test pause, resume, skip rest, and **Undo and edit set 1**.
+19. For a timed exercise, start, pause, resume, and reset the exercise timer.
+    Close the app during an unfinished set or rest period, reopen it, and
+    confirm the same exercise, set values, completed
+    sets, and timer position return.
+20. Open **Performance log** and confirm the logged result, personal best,
+    exercise selector, trend chart, effort, note, and explained **Next target**
+    appear. Start that unfinished exercise again and confirm **Use suggested
+    suggestion for this set** fills the recommendation without forcing the user
+    to accept it. Confirm the history card shows a **SET BREAKDOWN**.
+21. Open **Progress insights** again and confirm today's calendar entry, totals,
+    and recent activity updated.
+22. Return to **Plan preferences**, change one preference, save, and confirm the
     dashboard plan rebuilds. Restore the original preference if this was only a
     test.
-22. Scroll down to inspect all exercises and the weekly plan.
-23. Close and reopen the app, press Preview again, and confirm that the profile
-    and checked exercises remain.
-23. Use the sign-out icon in the top-right corner to return to the first page.
+23. Scroll down to inspect all exercises and the weekly plan.
+24. Close and reopen the app and confirm that the profile and checked exercises
+    remain.
+25. Open **Account & privacy**, then sign out.
 
 The workout can say **Recovery reset** on a non-training day. That is expected;
 the weekly schedule deliberately includes recovery days.
@@ -287,17 +310,23 @@ The most important files are:
 | `MainActivity.kt` | Starts the visible Android app. |
 | `PulsePlanApplication.kt` | Initializes Firebase when configured and creates the notification channel. |
 | `ui/PulsePlanApp.kt` | Contains the sign-in, onboarding, dashboard, exercise cards, and weekly UI. |
-| `ui/ActiveWorkoutScreen.kt` | Shows the focused exercise, rest countdown, and session summary. |
+| `ui/AccountScreen.kt` | Shows email verification, password reset, privacy information, sign-out, and protected account/data deletion. |
+| `ui/ActiveWorkoutScreen.kt` | Runs set-by-set entry, exercise timers, between-set rest, undo/edit, interruption recovery, and the measurable session summary. |
 | `ui/ExerciseGuideScreen.kt` | Shows written setup, movement, form, and safety guidance for one exercise. |
-| `ui/ProgressHistoryScreen.kt` | Shows the weekly summary, fair streak, and recent workout history. |
-| `ui/PulsePlanViewModel.kt` | The app's coordinator: sign-in state, onboarding state, workout state, and completed exercises. |
+| `ui/ProgressHistoryScreen.kt` | Shows the calendar, weekly trend, totals, streaks, milestones, selected-date exercise review, and recent history. |
+| `ui/PerformanceHistoryScreen.kt` | Shows personal bests, exercise-specific result history, notes, effort, and trend charts. |
+| `ui/PulsePlanViewModel.kt` | The app's coordinator: sign-in, onboarding, workout sessions, results, and completion state. |
 | `model/WorkoutModels.kt` | Defines goals, experience levels, personalities, equipment, movement preferences, profiles, workouts, and stable exercise-slot identity. |
+| `model/ExerciseResult.kt` | Defines typed exercise and per-set reps, weight, time, distance, effort, notes, and drafts. |
 | `domain/PlanGenerator.kt` | Generates daily and weekly plans, filters movement demands, explains automatic adjustments, and provides curated alternatives. |
 | `domain/ExerciseGuideCatalog.kt` | Stores the written guide for every exercise the plan generator can use. |
 | `domain/ExerciseVideoGuideCatalog.kt` | Maps every exercise to an exact real-video tutorial search. |
-| `domain/WorkoutSession.kt` | Contains the testable rules for exercise progression, rest, pause, resume, skip, and completion. |
-| `domain/ProgressTracker.kt` | Calculates weekly progress, history states, and fair workout streaks. |
-| `data/UserPreferences.kt` | Saves profiles, reminders, dated completion, alternatives, and sync timestamps with DataStore. |
+| `domain/WorkoutSession.kt` | Contains the testable rules for set progression, set/exercise rest, timers, undo, restoration, skip, and completion. |
+| `domain/WorkoutPrescription.kt` | Safely reads planned set counts and rep, time, or distance targets from an exercise prescription. |
+| `domain/ProgressTracker.kt` | Calculates calendar history, trends, totals, completion rate, milestones, and fair current/best streaks. |
+| `domain/PerformanceTracker.kt` | Calculates previous results, personal bests, exercise histories, chart values, and display labels. |
+| `domain/ProgressionCoach.kt` | Turns an explicit result and effort rating into a small, explained, optional next target. |
+| `data/UserPreferences.kt` | Saves profiles, reminders, active sessions, dated completion, results, alternatives, and sync timestamps with DataStore. |
 | `data/AuthRepository.kt` | Handles Firebase registration, sign-in, sign-out, and password-reset email. |
 | `data/CloudSyncModels.kt` | Defines timestamped cloud records, safe decoding, and newest-change conflict rules. |
 | `data/CloudSyncRepository.kt` | Reads and writes each signed-in user's private Firestore profile and dated workout records. |
@@ -308,8 +337,11 @@ The most important files are:
 | `AndroidManifest.xml` | Declares the app, activity, internet access, and notification permission. |
 | `app/build.gradle.kts` | App version, Android versions, dependencies, tests, and Firebase build values. |
 | `PlanGeneratorTest.kt` | Tests important workout-generation rules. |
-| `WorkoutSessionTest.kt` | Tests active-workout and rest-timer behavior. |
-| `ProgressTrackerTest.kt` | Tests weekly totals, recovery days, partial progress, and streak rules. |
+| `WorkoutSessionTest.kt` | Tests set/exercise progression, timers, rest, undo, completion, and interrupted-session restoration. |
+| `WorkoutPrescriptionTest.kt` | Tests rep, seconds, minutes, and safe fallback prescription parsing. |
+| `ProgressTrackerTest.kt` | Tests weekly trends, totals, completion rate, calendar details, recovery days, partial progress, and streak rules. |
+| `PerformanceTrackerTest.kt` | Tests personal-best rules, result ordering, comparisons, and effort-only entries. |
+| `ProgressionCoachTest.kt` | Tests goal-aware progression, repeat, ease-back, and no-invented-target rules. |
 | `ExerciseGuideCatalogTest.kt` | Ensures every generated movement has a complete written guide. |
 
 Files inside `app/build`, `.gradle`, or `.idea` are generated by tools. Do not
@@ -479,39 +511,42 @@ When an error appears:
 
 ## 13. Connecting real accounts with Firebase
 
-Version 0.10.0 contains the offline-first account sync architecture. It remains
-setup-pending, not production-verified, until a real Firebase project is
-connected and the complete flow is tested.
+Version 0.16.0 connected PulsePlan to the real `pulseplan-503519` Firebase
+project. Version 0.18.0 adds Google Sign-In.
 
 The broad process is:
 
 1. Create a Firebase project for PulsePlan.
 2. Add an Android app with package name
    `com.ahsanrehmat.pulseplan`.
-3. Enable Email/Password in Firebase Authentication.
-4. Create a Cloud Firestore database.
-5. Publish the checked-in `firestore.rules`. These rules allow a signed-in user
+3. Enable Email/Password and Google in Firebase Authentication.
+4. Add the debug or release SHA-1 certificate to the Android app.
+5. Create a Cloud Firestore database.
+6. Publish the checked-in `firestore.rules`. These rules allow a signed-in user
    to access only `users/<their Firebase uid>` and its `days` subcollection.
-6. Put the API key, app ID, and project ID into the untracked
+7. Put the API key, app ID, project ID, and Web OAuth client ID into the untracked
    `local.properties` file using the names documented in `README.md`.
-7. Rebuild the app.
-8. Confirm the first screen changes from **Firebase setup pending** to
-   **Accounts connected**.
-9. Test registration, sign-out, sign-in, password reset, invalid passwords,
-   duplicate emails, and app restart.
+8. Rebuild the app.
+9. Test Google sign-in, email registration, sign-out, password reset, invalid
+   passwords, duplicate emails, and app restart.
 10. Change the profile, reminder, one completed exercise, and one alternative.
     Sign into the same account on a second device and verify all four appear.
 11. Make different changes on both devices and confirm the latest timestamp
     wins without losing the other records.
+12. Open **Account & privacy**, send a verification email, open its link, and
+    refresh the verification status.
+13. With a disposable account only, type **DELETE**, confirm with its sign-in
+    provider, and verify the account, cloud history, local cache, and scheduled
+    reminder are removed.
 
 Never paste Firebase values, passwords, signing keys, or other secrets into a
 Kotlin file, Git commit, screenshot, or public message. `local.properties` is
 ignored by Git for this reason.
 
 Firebase Authentication provides identity. Firestore stores the user's
-profile, reminder, completion history, and substitutions. DataStore remains the
+profile, reminder, completion history, exercise results, and substitutions. DataStore remains the
 fast local source so a failed connection does not erase progress. The dashboard
-shows whether data is syncing, up to date, local only, or still setup-pending.
+shows whether data is syncing, backed up, or saved locally.
 
 ## 14. Git is the project's safety net
 
@@ -524,7 +559,7 @@ created yet. Before major upgrades:
 1. Review which files will be included.
 2. Confirm `local.properties`, `.idea`, `.tooling`, build folders, and secrets
    are ignored.
-3. Create a baseline commit containing the known-working prototype.
+3. Create a baseline commit containing the known-working app.
 4. Create a new branch for each meaningful feature.
 5. Commit only after building and testing.
 
@@ -579,15 +614,20 @@ Build in this order so later work rests on a stable base:
 
 ### Phase 2: real accounts and cloud data
 
-- Firebase Authentication client completed in version 0.10.0; live setup and
-  verification are still pending.
-- Password-reset client completed in version 0.10.0; live email testing is
-  still pending.
+- Firebase Authentication client completed in version 0.10.0 and live
+  registration/sign-in verification completed in version 0.16.0.
+- Password-reset client completed in version 0.10.0 and live reset dispatch
+  verification completed in version 0.16.0. Delivery to a controlled inbox
+  still needs a manual test.
 - Firestore profile, reminder, workout-history, and substitution sync completed
-  in version 0.10.0; live cross-device testing is still pending.
+  in version 0.10.0; live upload and clean-app profile restore were verified in
+  version 0.16.0.
 - Timestamped newest-change conflict behavior completed in version 0.10.0.
-- Add email verification.
-- Add account and cloud-data deletion.
+- Email-verification send/resend and refresh controls completed in version
+  0.17.0.
+- Password-reauthenticated account, cloud-data, local-cache, and reminder
+  deletion completed in version 0.17.0.
+- Google Sign-In and provider-aware deletion completed in version 0.18.0.
 
 ### Phase 3: better workout experience
 
@@ -609,13 +649,21 @@ Build in this order so later work rests on a stable base:
 - 28-day workout history completed in version 0.4.0.
 - Fair workout streaks completed in version 0.4.0.
 - Weekly completion summary completed in version 0.4.0.
-- Add calendar filtering.
-- Add charts and personal records.
+- Interactive calendar, date-level workout review, six-week trend, totals,
+  completion rate, best streak, and milestones completed in version 0.12.0.
+- Explicit exercise results, active-session restoration, previous-result
+  comparison, personal bests, and result charts completed in version 0.13.0.
+- Explainable, goal-aware, optional next-target suggestions completed in version
+  0.14.0.
+- Set-by-set results, editable set recovery, automatic rest, timed-set
+  countdowns, interruption restoration, set breakdowns, and session totals
+  completed in version 0.15.0.
 
 ### Phase 5: production release
 
 - Accessibility review.
-- Privacy policy and account/data deletion.
+- Publish the final web privacy-policy URL and complete the disposable-account
+  deletion test.
 - Security review.
 - Real-device testing on multiple Android versions and screen sizes.
 - Release signing, optimized release build, store listing, and staged rollout.
@@ -640,15 +688,11 @@ use Device Manager's menu to stop the old instance, then start it again.
 Press **Shift + F10** for a full rerun. If necessary, uninstall PulsePlan from
 the emulator and run it again.
 
-### The app returns to the sign-in page after restart
+### Sign-in is unavailable
 
-Preview mode is not a real retained Firebase session. Press **Preview the app**
-again. The locally saved preview profile and workout history should still be
-available.
-
-### Sign-in says Firebase is not configured
-
-That is expected until the Firebase milestone in section 13 is completed.
+Rebuild after checking the `firebase.*` and `google.webClientId` values in the
+untracked `local.properties` file. A new computer needs its own local values as
+described in section 13.
 
 ### The workout says Recovery
 
@@ -673,7 +717,8 @@ phone for realistic performance testing.
   clinical treatment.
 - Collect only data the product genuinely needs.
 - Never log or display passwords.
-- Provide a clear way to delete an account and cloud data before public launch.
+- Keep the version 0.17.0 account/data deletion path visible, protected by
+  password reauthentication, and covered by release testing.
 - Keep Firebase configuration and release signing secrets out of Git.
 
 ## 19. Small glossary
@@ -682,7 +727,7 @@ phone for realistic performance testing.
 - **APK:** The installable Android application file.
 - **Build:** Turning the source code into an app Android can run.
 - **Composable:** A Kotlin function that draws part of a Compose screen.
-- **DataStore:** Local on-device storage used by this prototype.
+- **DataStore:** Local on-device storage used by the app.
 - **Dependency:** A library the project uses instead of rebuilding everything.
 - **Emulator:** A virtual Android device running on the computer.
 - **Firebase:** Google's services used here for account authentication.
@@ -702,7 +747,7 @@ phone for realistic performance testing.
 - [ ] Confirm Gradle uses JDK 17+.
 - [ ] Start `PulsePlan_API_36`.
 - [ ] Run the app.
-- [ ] Complete the Preview onboarding flow.
+- [ ] Sign in and complete onboarding.
 - [ ] Check and uncheck an exercise.
 - [ ] Find `PulsePlanApp.kt`, `WorkoutModels.kt`, and `PlanGenerator.kt`.
 - [ ] Make one harmless text change.

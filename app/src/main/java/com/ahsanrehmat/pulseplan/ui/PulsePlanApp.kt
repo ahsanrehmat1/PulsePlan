@@ -38,21 +38,21 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AccountCircle
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CloudDone
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.CloudSync
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.EmojiEvents
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MenuBook
 import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.PhoneAndroid
 import androidx.compose.material.icons.filled.Restore
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Timer
@@ -84,11 +84,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
@@ -97,8 +99,11 @@ import androidx.compose.ui.unit.dp
 import androidx.core.app.NotificationManagerCompat
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.ahsanrehmat.pulseplan.BuildConfig
+import com.ahsanrehmat.pulseplan.data.AccountProvider
 import com.ahsanrehmat.pulseplan.model.DailyWorkout
 import com.ahsanrehmat.pulseplan.domain.ExerciseGuideCatalog
+import com.ahsanrehmat.pulseplan.domain.ProgressionCoach
 import com.ahsanrehmat.pulseplan.model.Equipment
 import com.ahsanrehmat.pulseplan.model.ExperienceLevel
 import com.ahsanrehmat.pulseplan.model.FitnessGoal
@@ -113,7 +118,9 @@ import com.ahsanrehmat.pulseplan.ui.theme.InkSoft
 import com.ahsanrehmat.pulseplan.ui.theme.Line
 import com.ahsanrehmat.pulseplan.ui.theme.Muted
 import com.ahsanrehmat.pulseplan.ui.theme.PulseGreen
+import com.ahsanrehmat.pulseplan.ui.theme.PulseGreenDark
 import com.ahsanrehmat.pulseplan.ui.theme.Warm
+import kotlinx.coroutines.launch
 
 @Composable
 fun PulsePlanApp(viewModel: PulsePlanViewModel) {
@@ -125,8 +132,8 @@ fun PulsePlanApp(viewModel: PulsePlanViewModel) {
             state = state,
             onSignIn = viewModel::signIn,
             onRegister = viewModel::register,
+            onGoogleSignIn = viewModel::signInWithGoogle,
             onPasswordReset = viewModel::sendPasswordReset,
-            onPreview = viewModel::continueInPreview,
             onClearError = viewModel::clearError,
         )
         AppPhase.ONBOARDING -> OnboardingScreen(
@@ -134,6 +141,7 @@ fun PulsePlanApp(viewModel: PulsePlanViewModel) {
             onComplete = viewModel::saveProfile,
         )
         AppPhase.DASHBOARD -> {
+            val account = state.account
             val profile = state.profile
             val workout = state.workout
             val workoutSession = state.workoutSession
@@ -147,12 +155,29 @@ fun PulsePlanApp(viewModel: PulsePlanViewModel) {
                     onBack = viewModel::hideExerciseGuide,
                 )
             } else if (workout != null && workoutSession != null) {
+                val activeExercise = workout.exercises
+                    .getOrNull(workoutSession.currentExerciseIndex)
+                val previousResult = activeExercise
+                    ?.let { state.performance.summaryFor(it.sourceExerciseId) }
+                    ?.latest
+                    ?.result
                 ActiveWorkoutScreen(
                     workout = workout,
                     session = workoutSession,
                     completedExerciseIds = state.completedExerciseIds,
-                    onCompleteExercise = viewModel::completeActiveExercise,
+                    exerciseResultsToday = state.exerciseResultsToday,
+                    previousResult = previousResult,
+                    progressionSuggestion = profile
+                        ?.let { ProgressionCoach.suggest(it.goal, previousResult) },
+                    lastResultMessage = state.lastResultMessage,
+                    onUpdateSetDraft = viewModel::updateActiveSetDraft,
+                    onUpdateExerciseFeedback = viewModel::updateActiveExerciseFeedback,
+                    onCompleteSet = viewModel::completeActiveSet,
+                    onUndoLastSet = viewModel::undoLastActiveSet,
                     onSkipExercise = viewModel::skipActiveExercise,
+                    onSetTimerTick = viewModel::tickSetTimer,
+                    onToggleSetTimer = viewModel::toggleSetTimer,
+                    onResetSetTimer = viewModel::resetSetTimer,
                     onRestTick = viewModel::tickRestTimer,
                     onToggleRestTimer = viewModel::toggleRestTimer,
                     onSkipRest = viewModel::skipRest,
@@ -164,12 +189,37 @@ fun PulsePlanApp(viewModel: PulsePlanViewModel) {
                     progress = state.progress,
                     onBack = viewModel::hideProgress,
                 )
+            } else if (state.isPerformanceVisible && profile != null) {
+                PerformanceHistoryScreen(
+                    performance = state.performance,
+                    fitnessGoal = profile.goal,
+                    onDeleteResult = viewModel::deleteExerciseResult,
+                    onBack = viewModel::hidePerformance,
+                )
             } else if (state.isPlanEditorVisible && profile != null) {
                 OnboardingScreen(
                     suggestedName = profile.displayName,
                     initialProfile = profile,
                     onComplete = viewModel::saveProfile,
                     onCancel = viewModel::hidePlanEditor,
+                )
+            } else if (state.isAccountVisible && account != null) {
+                AccountScreen(
+                    account = account,
+                    isBusy = state.isBusy,
+                    errorMessage = state.errorMessage,
+                    noticeMessage = state.noticeMessage,
+                    onBack = viewModel::hideAccount,
+                    onClearMessage = viewModel::clearError,
+                    onRefreshVerification = viewModel::refreshAccountStatus,
+                    onSendVerification = viewModel::sendEmailVerification,
+                    onPasswordReset = {
+                        viewModel.sendPasswordReset(account.email)
+                    },
+                    onLinkGoogle = viewModel::linkWithGoogle,
+                    onSignOut = viewModel::signOut,
+                    onDeleteAccount = viewModel::deleteAccount,
+                    googleWebClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
                 )
             } else {
                 DashboardScreen(
@@ -178,10 +228,11 @@ fun PulsePlanApp(viewModel: PulsePlanViewModel) {
                     onSwapExercise = viewModel::swapExercise,
                     onStartWorkout = viewModel::startActiveWorkout,
                     onShowProgress = viewModel::showProgress,
+                    onShowPerformance = viewModel::showPerformance,
                     onEditPlan = viewModel::showPlanEditor,
                     onShowExerciseGuide = viewModel::showExerciseGuide,
                     onReminderTimeChange = viewModel::updateReminderTime,
-                    onSignOut = viewModel::signOut,
+                    onOpenAccount = viewModel::showAccount,
                 )
             }
         }
@@ -205,11 +256,14 @@ private fun AuthScreen(
     state: PulsePlanUiState,
     onSignIn: (String, String) -> Unit,
     onRegister: (String, String) -> Unit,
+    onGoogleSignIn: (String) -> Unit,
     onPasswordReset: (String) -> Unit,
-    onPreview: () -> Unit,
     onClearError: () -> Unit,
 ) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
     var isCreatingAccount by remember { mutableStateOf(false) }
+    var isGooglePromptOpen by remember { mutableStateOf(false) }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var localError by remember { mutableStateOf<String?>(null) }
@@ -217,7 +271,7 @@ private fun AuthScreen(
     fun submit() {
         localError = when {
             !state.isFirebaseConfigured ->
-                "Firebase accounts are not connected yet. Use preview mode for now."
+                "Sign-in is temporarily unavailable."
             !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() ->
                 "Enter a valid email address."
             password.length < 8 ->
@@ -232,7 +286,7 @@ private fun AuthScreen(
     fun requestPasswordReset() {
         localError = when {
             !state.isFirebaseConfigured ->
-                "Firebase accounts are not connected yet. Use preview mode for now."
+                "Sign-in is temporarily unavailable."
             !Patterns.EMAIL_ADDRESS.matcher(email.trim()).matches() ->
                 "Enter your account email first."
             else -> null
@@ -291,8 +345,64 @@ private fun AuthScreen(
             )
         }
 
-        item {
-            AccountConnectionPill(isConnected = state.isFirebaseConfigured)
+        if (BuildConfig.GOOGLE_WEB_CLIENT_ID.isNotBlank()) {
+            item {
+                OutlinedButton(
+                    onClick = {
+                        if (isGooglePromptOpen || state.isBusy) return@OutlinedButton
+                        localError = null
+                        onClearError()
+                        isGooglePromptOpen = true
+                        scope.launch {
+                            when (
+                                val result = requestGoogleIdToken(
+                                    context = context,
+                                    serverClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID,
+                                )
+                            ) {
+                                is GoogleCredentialOutcome.Success ->
+                                    onGoogleSignIn(result.idToken)
+                                GoogleCredentialOutcome.Cancelled -> Unit
+                                is GoogleCredentialOutcome.Error ->
+                                    localError = result.message
+                            }
+                            isGooglePromptOpen = false
+                        }
+                    },
+                    enabled = !state.isBusy && !isGooglePromptOpen,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(54.dp),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(
+                        contentColor = Color.White,
+                    ),
+                    border = androidx.compose.foundation.BorderStroke(
+                        1.dp,
+                        Color(0xFF596257),
+                    ),
+                ) {
+                    if (isGooglePromptOpen) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp,
+                        )
+                    } else {
+                        Text("Continue with Google")
+                    }
+                }
+            }
+
+            item {
+                Text(
+                    text = "or",
+                    modifier = Modifier.fillMaxWidth(),
+                    color = Color(0xFFB8C1B3),
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+            }
         }
 
         item {
@@ -388,20 +498,6 @@ private fun AuthScreen(
         }
 
         item {
-            OutlinedButton(
-                onClick = onPreview,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(52.dp),
-                shape = RoundedCornerShape(16.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = PulseGreen),
-                border = androidx.compose.foundation.BorderStroke(1.dp, PulseGreen),
-            ) {
-                Text("Preview the app")
-            }
-        }
-
-        item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.Center,
@@ -442,30 +538,18 @@ private fun darkFieldColors() = OutlinedTextFieldDefaults.colors(
 )
 
 @Composable
-private fun AccountConnectionPill(isConnected: Boolean) {
-    val background = if (isConnected) PulseGreen.copy(alpha = 0.14f) else Warm.copy(alpha = 0.14f)
-    val foreground = if (isConnected) PulseGreen else Warm
-    Row(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(background)
-            .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            modifier = Modifier
-                .size(7.dp)
-                .clip(CircleShape)
-                .background(foreground),
-        )
-        Spacer(Modifier.width(8.dp))
-        Text(
-            text = if (isConnected) "Accounts connected" else "Preview mode - Firebase setup pending",
-            color = foreground,
-            style = MaterialTheme.typography.bodyMedium,
-        )
-    }
-}
+private fun onboardingFieldColors() = OutlinedTextFieldDefaults.colors(
+    focusedTextColor = Ink,
+    unfocusedTextColor = Ink,
+    disabledTextColor = Muted,
+    focusedPlaceholderColor = Muted,
+    unfocusedPlaceholderColor = Muted,
+    focusedBorderColor = PulseGreenDark,
+    unfocusedBorderColor = Line,
+    focusedContainerColor = Color.White,
+    unfocusedContainerColor = Color.White,
+    cursorColor = PulseGreenDark,
+)
 
 @Composable
 private fun CloudSyncCard(
@@ -473,36 +557,30 @@ private fun CloudSyncCard(
     message: String?,
 ) {
     val details = when (syncState) {
-        CloudSyncState.PREVIEW -> Triple(
-            Icons.Default.PhoneAndroid,
-            "Preview data stays on this device",
-            "Create or sign in to an account later to enable cloud backup.",
-        )
         CloudSyncState.SETUP_REQUIRED -> Triple(
             Icons.Default.CloudOff,
-            "Cloud backup setup pending",
-            "Preview remains available while Firebase is being connected.",
+            "Cloud backup unavailable",
+            "Your progress is saved on this device.",
         )
         CloudSyncState.SYNCING -> Triple(
             Icons.Default.CloudSync,
-            "Saving your latest changes",
-            "Keep the app open for a moment.",
+            "Saving changes",
+            "This will only take a moment.",
         )
         CloudSyncState.UP_TO_DATE -> Triple(
             Icons.Default.CloudDone,
-            "Cloud backup is up to date",
-            "Your plan and progress are available when you sign in on another device.",
+            "Progress backed up",
+            "Your plan is ready on your other devices.",
         )
         CloudSyncState.LOCAL_ONLY -> Triple(
             Icons.Default.CloudOff,
-            "Saved safely on this device",
-            message ?: "Cloud backup will retry the next time you sign in.",
+            "Saved on this device",
+            message ?: "Cloud backup will retry automatically.",
         )
     }
     val accent = when (syncState) {
         CloudSyncState.UP_TO_DATE -> PulseGreen
         CloudSyncState.SYNCING -> Warm
-        CloudSyncState.PREVIEW,
         CloudSyncState.SETUP_REQUIRED,
         CloudSyncState.LOCAL_ONLY,
         -> Muted
@@ -646,6 +724,7 @@ private fun OnboardingScreen(
                     placeholder = { Text("Your first name") },
                     singleLine = true,
                     shape = RoundedCornerShape(16.dp),
+                    colors = onboardingFieldColors(),
                 )
             }
         }
@@ -761,9 +840,10 @@ private fun OnboardingScreen(
                     placeholder = { Text("Optional note for your own reference") },
                     minLines = 2,
                     shape = RoundedCornerShape(16.dp),
+                    colors = onboardingFieldColors(),
                 )
                 Text(
-                    text = "For pain, injury, pregnancy, or a health condition, ask a qualified professional what is appropriate for you.",
+                    text = "For an injury or health condition, check with a qualified professional.",
                     color = Muted,
                     style = MaterialTheme.typography.bodySmall,
                 )
@@ -777,7 +857,7 @@ private fun OnboardingScreen(
                     shape = RoundedCornerShape(16.dp),
                 ) {
                     Text(
-                        text = "Your saved history is not deleted. Schedule or exercise changes can recalculate streaks and totals; only today's completed exercises that still match remain checked.",
+                        text = "Your history stays saved. Plan changes may update streaks and totals.",
                         modifier = Modifier.padding(16.dp),
                         color = Ink,
                         style = MaterialTheme.typography.bodyMedium,
@@ -959,10 +1039,11 @@ private fun DashboardScreen(
     onSwapExercise: (String) -> Unit,
     onStartWorkout: () -> Unit,
     onShowProgress: () -> Unit,
+    onShowPerformance: () -> Unit,
     onEditPlan: () -> Unit,
     onShowExerciseGuide: (String) -> Unit,
     onReminderTimeChange: (Int, Int) -> Unit,
-    onSignOut: () -> Unit,
+    onOpenAccount: () -> Unit,
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
     var notificationsEnabled by remember {
@@ -1015,8 +1096,11 @@ private fun DashboardScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onSignOut) {
-                        Icon(Icons.AutoMirrored.Filled.Logout, contentDescription = "Sign out")
+                    IconButton(onClick = onOpenAccount) {
+                        Icon(
+                            Icons.Default.AccountCircle,
+                            contentDescription = "Account and privacy",
+                        )
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -1055,6 +1139,53 @@ private fun DashboardScreen(
                 )
             }
 
+            if (
+                state.account?.provider == AccountProvider.EMAIL &&
+                !state.account.isEmailVerified
+            ) {
+                item {
+                    Card(
+                        onClick = onOpenAccount,
+                        colors = CardDefaults.cardColors(
+                            containerColor = Warm.copy(alpha = 0.32f),
+                        ),
+                        shape = RoundedCornerShape(18.dp),
+                        border = androidx.compose.foundation.BorderStroke(1.dp, Warm),
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Icon(
+                                Icons.Default.Email,
+                                contentDescription = null,
+                                tint = Ink,
+                            )
+                            Column(Modifier.weight(1f)) {
+                                Text(
+                                    text = "Verify your email",
+                                    color = Ink,
+                                    style = MaterialTheme.typography.titleMedium,
+                                )
+                                Text(
+                                    text = "Secure account recovery and confirm this address.",
+                                    color = Muted,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                )
+                            }
+                            Icon(
+                                Icons.AutoMirrored.Filled.ArrowForward,
+                                contentDescription = "Open account and privacy",
+                                tint = Ink,
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 ProgressSummary(
                     completed = state.completedExerciseIds.size,
@@ -1067,6 +1198,13 @@ private fun DashboardScreen(
                 ProgressHistoryCard(
                     progress = state.progress,
                     onClick = onShowProgress,
+                )
+            }
+
+            item {
+                PerformanceHistoryCard(
+                    performance = state.performance,
+                    onClick = onShowPerformance,
                 )
             }
 
@@ -1230,7 +1368,7 @@ private fun DashboardScreen(
 
             item {
                 Text(
-                    text = "Exercise at a level appropriate for you. Stop if you feel pain, dizziness, or unusual discomfort.",
+                    text = "Choose a safe pace. Stop if you feel pain, dizziness, or unusual discomfort.",
                     color = Muted,
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
@@ -1352,13 +1490,14 @@ private fun ProgressHistoryCard(
                 Spacer(Modifier.width(12.dp))
                 Column {
                     Text(
-                        text = "Progress & history",
+                        text = "Progress insights",
                         color = Ink,
                         style = MaterialTheme.typography.titleMedium,
                     )
                     Text(
-                        text = "${progress.currentStreak} workout streak · " +
-                            "${progress.completedThisWeek} of ${progress.plannedThisWeek} this week",
+                        text = "${progress.currentStreak} current - " +
+                            "${progress.bestStreak} best - " +
+                            "${progress.completedThisWeek}/${progress.plannedThisWeek} this week",
                         color = Muted,
                         style = MaterialTheme.typography.bodyMedium,
                     )
@@ -1366,7 +1505,80 @@ private fun ProgressHistoryCard(
             }
             Icon(
                 Icons.AutoMirrored.Filled.ArrowForward,
-                contentDescription = "Open progress and history",
+                contentDescription = "Open progress insights",
+                tint = Ink,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PerformanceHistoryCard(
+    performance: com.ahsanrehmat.pulseplan.domain.PerformanceSnapshot,
+    onClick: () -> Unit,
+) {
+    Card(
+        onClick = onClick,
+        colors = CardDefaults.cardColors(containerColor = Warm.copy(alpha = 0.55f)),
+        shape = RoundedCornerShape(20.dp),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Line),
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(18.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(
+                modifier = Modifier.weight(1f),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(42.dp)
+                        .clip(RoundedCornerShape(13.dp))
+                        .background(PulseGreen.copy(alpha = 0.4f)),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        Icons.Default.EmojiEvents,
+                        contentDescription = null,
+                        tint = Ink,
+                    )
+                }
+                Spacer(Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = "Performance log",
+                        color = Ink,
+                        style = MaterialTheme.typography.titleMedium,
+                    )
+                    Text(
+                        text = if (performance.totalLoggedResults == 0) {
+                            "Log your first reps, time, or distance"
+                        } else {
+                            val resultWord = if (performance.totalLoggedResults == 1) {
+                                "result"
+                            } else {
+                                "results"
+                            }
+                            val exerciseWord = if (performance.exercisesTracked == 1) {
+                                "exercise"
+                            } else {
+                                "exercises"
+                            }
+                            "${performance.totalLoggedResults} $resultWord - " +
+                                "${performance.exercisesTracked} $exerciseWord tracked"
+                        },
+                        color = Muted,
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
+                }
+            }
+            Icon(
+                Icons.AutoMirrored.Filled.ArrowForward,
+                contentDescription = "Open performance log",
                 tint = Ink,
             )
         }

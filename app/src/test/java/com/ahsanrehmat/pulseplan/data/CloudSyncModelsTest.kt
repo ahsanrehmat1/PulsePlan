@@ -1,6 +1,10 @@
 package com.ahsanrehmat.pulseplan.data
 
 import com.ahsanrehmat.pulseplan.model.Equipment
+import com.ahsanrehmat.pulseplan.model.ExerciseEffort
+import com.ahsanrehmat.pulseplan.model.ExerciseMetricType
+import com.ahsanrehmat.pulseplan.model.ExerciseResult
+import com.ahsanrehmat.pulseplan.model.ExerciseSetResult
 import com.ahsanrehmat.pulseplan.model.ExperienceLevel
 import com.ahsanrehmat.pulseplan.model.FitnessGoal
 import com.ahsanrehmat.pulseplan.model.MovementPreference
@@ -80,6 +84,36 @@ class CloudSyncModelsTest {
         val day = CloudDaySnapshot(
             completedExercises = SyncRecord(setOf("squat", "plank"), 789L),
             substitutions = SyncRecord(mapOf("squat" to "chair-squat"), 790L),
+            exerciseResults = SyncRecord(
+                mapOf(
+                    "squat" to ExerciseResult(
+                        exerciseId = "squat",
+                        exerciseName = "Bodyweight squat",
+                        prescription = "2 x 10",
+                        metricType = ExerciseMetricType.REPS,
+                        reps = 12,
+                        weightKg = 5.5,
+                        effort = ExerciseEffort.GOOD,
+                        notes = "Controlled form",
+                        loggedAtEpochMillis = 791L,
+                        sets = listOf(
+                            ExerciseSetResult(
+                                setNumber = 1,
+                                metricType = ExerciseMetricType.REPS,
+                                reps = 12,
+                                weightKg = 5.5,
+                            ),
+                            ExerciseSetResult(
+                                setNumber = 2,
+                                metricType = ExerciseMetricType.REPS,
+                                reps = 11,
+                                weightKg = 5.5,
+                            ),
+                        ),
+                    ),
+                ),
+                792L,
+            ),
         )
 
         val decodedAccount = CloudSyncCodec.accountFromMap(
@@ -91,6 +125,55 @@ class CloudSyncModelsTest {
 
         assertEquals(account, decodedAccount)
         assertEquals(date to day, decodedDay)
+    }
+
+    @Test
+    fun `newer exercise results win without overwriting newer completions`() {
+        val date = LocalDate.of(2026, 7, 25)
+        val localResult = ExerciseResult(
+            exerciseId = "squat",
+            exerciseName = "Squat",
+            prescription = "3 x 10",
+            metricType = ExerciseMetricType.REPS,
+            reps = 10,
+            loggedAtEpochMillis = 100L,
+        )
+        val remoteResult = localResult.copy(reps = 12, loggedAtEpochMillis = 200L)
+        val local = CloudAccountSnapshot(
+            days = mapOf(
+                date to CloudDaySnapshot(
+                    completedExercises = SyncRecord(setOf("squat"), 500L),
+                    exerciseResults = SyncRecord(mapOf("squat" to localResult), 100L),
+                ),
+            ),
+        )
+        val remote = CloudAccountSnapshot(
+            days = mapOf(
+                date to CloudDaySnapshot(
+                    completedExercises = SyncRecord(emptySet(), 400L),
+                    exerciseResults = SyncRecord(mapOf("squat" to remoteResult), 200L),
+                ),
+            ),
+        )
+
+        val merged = CloudSyncMerger.merge(local, remote)
+
+        assertEquals(setOf("squat"), merged.days[date]?.completedExercises?.value)
+        assertEquals(12, merged.days[date]?.exerciseResults?.value?.get("squat")?.reps)
+    }
+
+    @Test
+    fun `empty result map round trips so a deletion can sync`() {
+        val date = LocalDate.of(2026, 7, 25)
+        val day = CloudDaySnapshot(
+            exerciseResults = SyncRecord(emptyMap(), 900L),
+        )
+
+        val decoded = CloudSyncCodec.dayFromMap(
+            CloudSyncCodec.dayToMap(date, day),
+        )
+
+        assertEquals(date to day, decoded)
     }
 
     @Test

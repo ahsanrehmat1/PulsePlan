@@ -1,3 +1,4 @@
+
 import java.util.Properties
 
 plugins {
@@ -25,14 +26,19 @@ android {
         applicationId = "com.ahsanrehmat.pulseplan"
         minSdk = 26
         targetSdk = 36
-        versionCode = 11
-        versionName = "0.11.0"
+        versionCode = 18
+        versionName = "0.18.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "FIREBASE_API_KEY", "\"${localValue("firebase.apiKey")}\"")
         buildConfigField("String", "FIREBASE_APP_ID", "\"${localValue("firebase.appId")}\"")
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localValue("firebase.projectId")}\"")
+        buildConfigField(
+            "String",
+            "GOOGLE_WEB_CLIENT_ID",
+            "\"${localValue("google.webClientId")}\"",
+        )
     }
 
     buildTypes {
@@ -87,6 +93,9 @@ dependencies {
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
     implementation("com.google.firebase:firebase-auth")
     implementation("com.google.firebase:firebase-firestore")
+    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials-play-services-auth:1.3.0")
+    implementation("com.google.android.libraries.identity.googleid:googleid:1.1.1")
 
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.3.0")

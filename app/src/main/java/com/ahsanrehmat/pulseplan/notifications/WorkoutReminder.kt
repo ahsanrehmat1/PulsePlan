@@ -59,6 +59,10 @@ object WorkoutReminder {
         )
     }
 
+    fun cancel(context: Context) {
+        WorkManager.getInstance(context).cancelUniqueWork(WORK_NAME)
+    }
+
     internal fun delayUntilNextReminder(
         now: ZonedDateTime,
         hour: Int,
