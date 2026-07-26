@@ -67,7 +67,8 @@ Email/password registration, sign-out and sign-in, password-reset dispatch,
 Firestore upload, and profile restoration after clearing all local app data
 have been verified on a clean emulator. Google Sign-In and provider-aware
 account deletion are also working on a physical Android device. Version 0.19.0
-adds Crashlytics and public Play Store policy pages. A final destructive
+adds Crashlytics and public Play Store policy pages. A controlled fatal report
+was verified in the Firebase dashboard from an SM-N986N. A final destructive
 deletion test should use a disposable account before release.
 
 - [Privacy policy](https://ahsanrehmat1.github.io/pulseplan-privacy.html)

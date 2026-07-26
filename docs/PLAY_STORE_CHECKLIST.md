@@ -10,6 +10,7 @@
 - Public account-deletion request:
   https://ahsanrehmat1.github.io/pulseplan-delete-account.html
 - Firebase Crashlytics SDK
+- Controlled Crashlytics report verified from an SM-N986N
 - Unit tests, debug APK build, and Android lint
 
 ## Data safety notes
@@ -32,7 +33,6 @@ included SDKs before submitting.
 
 ## Before internal testing
 
-- Verify one Crashlytics test report in Firebase
 - Delete one disposable account end to end
 - Test offline launch, sign-in errors, and cloud recovery
 - Test TalkBack, large text, and a small screen

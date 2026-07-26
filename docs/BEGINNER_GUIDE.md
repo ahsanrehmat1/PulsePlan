@@ -629,7 +629,7 @@ Build in this order so later work rests on a stable base:
   deletion completed in version 0.17.0.
 - Google Sign-In and provider-aware deletion completed in version 0.18.0.
 - Crashlytics integration and public privacy/deletion pages completed in
-  version 0.19.0.
+  version 0.19.0. A controlled fatal report was verified from an SM-N986N.
 
 ### Phase 3: better workout experience
 
