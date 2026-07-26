@@ -1,14 +1,14 @@
 # PulsePlan
 
-PulsePlan is an Android workout planner built with Kotlin and Jetpack Compose.
+I built PulsePlan as an Android workout planner with Kotlin and Jetpack Compose.
 It creates a daily plan from a user's goal, experience, workout personality,
 equipment, schedule, and preferred session length.
 
-**[View Ahsan Rehmat's portfolio](https://ahsanrehmat1.github.io)**
+**[View my portfolio](https://ahsanrehmat1.github.io)**
 
 ![PulsePlan sign-in screen](docs/images/pulseplan-auth.png)
 
-New to the project? Start with the plain-language
+New to the project? Start with my plain-language
 [beginner guide](docs/BEGINNER_GUIDE.md).
 
 ## Current vertical slice
@@ -43,9 +43,9 @@ New to the project? Start with the plain-language
 - Android Gradle Plugin 9.3.1
 - Gradle 9.6.1
 
-The repository does not commit secrets. Version 0.11.0 contains the account and
-cloud-sync code, but live Firebase registration and synchronization remain
-unverified until a real project is connected.
+I do not commit secrets to this repository. Version 0.11.0 contains the account
+and cloud-sync code, but I have not yet verified live Firebase registration and
+synchronization with a real project.
 
 To enable real accounts, create a Firebase Android app whose package is
 `com.ahsanrehmat.pulseplan`, enable Email/Password under Firebase
