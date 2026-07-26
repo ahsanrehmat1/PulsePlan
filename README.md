@@ -1,15 +1,64 @@
 # PulsePlan
 
+[![Android CI](https://github.com/ahsanrehmat1/PulsePlan/actions/workflows/android-ci.yml/badge.svg)](https://github.com/ahsanrehmat1/PulsePlan/actions/workflows/android-ci.yml)
+
 I built PulsePlan as an Android workout planner with Kotlin and Jetpack Compose.
 It creates a daily plan from a user's goal, experience, workout personality,
 equipment, schedule, and preferred session length.
 
 **[View my portfolio](https://ahsanrehmat1.github.io)**
 
-![PulsePlan sign-in screen](docs/images/pulseplan-auth.png)
+<p align="center">
+  <img
+    src="docs/images/pulseplan-dashboard.png"
+    alt="PulsePlan dashboard showing cloud backup, today's progress, and workout tracking"
+    width="300"
+  />
+</p>
 
 New to the project? Start with my plain-language
 [beginner guide](docs/BEGINNER_GUIDE.md).
+
+## Current app walkthrough
+
+<table>
+  <tr>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-auth.png" alt="PulsePlan Firebase sign-in screen" />
+      <br /><sub>Firebase sign-in</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-onboarding.png" alt="PulsePlan personalized onboarding screen" />
+      <br /><sub>Personalized onboarding</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-preferences.png" alt="PulsePlan schedule and movement preferences" />
+      <br /><sub>Plan preferences</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-active-workout.png" alt="PulsePlan set-by-set workout screen" />
+      <br /><sub>Set-by-set workouts</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-exercise-guide.png" alt="PulsePlan exercise guide screen" />
+      <br /><sub>Exercise guidance</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-progress.png" alt="PulsePlan progress insights screen" />
+      <br /><sub>Progress insights</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-performance.png" alt="PulsePlan performance log screen" />
+      <br /><sub>Performance logging</sub>
+    </td>
+    <td align="center" width="25%">
+      <img src="docs/images/pulseplan-dashboard.png" alt="PulsePlan personalized dashboard" />
+      <br /><sub>Cloud-backed dashboard</sub>
+    </td>
+  </tr>
+</table>
 
 ## Current vertical slice
 
