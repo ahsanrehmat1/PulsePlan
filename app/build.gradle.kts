@@ -15,6 +15,22 @@ val localProperties = Properties().apply {
     }
 }
 
+val releaseSigningProperties = Properties().apply {
+    System.getenv("PULSEPLAN_SIGNING_PROPERTIES")
+        ?.takeIf(String::isNotBlank)
+        ?.let(::file)
+        ?.takeIf { it.isFile }
+        ?.inputStream()
+        ?.use(::load)
+}
+
+val hasReleaseSigning = listOf(
+    "storeFile",
+    "storePassword",
+    "keyAlias",
+    "keyPassword",
+).all { !releaseSigningProperties.getProperty(it).isNullOrBlank() }
+
 fun localValue(name: String): String = localProperties.getProperty(name, "")
     .replace("\\", "\\\\")
     .replace("\"", "\\\"")
@@ -45,9 +61,23 @@ android {
         )
     }
 
+    signingConfigs {
+        if (hasReleaseSigning) {
+            create("release") {
+                storeFile = rootProject.file(releaseSigningProperties.getProperty("storeFile"))
+                storePassword = releaseSigningProperties.getProperty("storePassword")
+                keyAlias = releaseSigningProperties.getProperty("keyAlias")
+                keyPassword = releaseSigningProperties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
+            if (hasReleaseSigning) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro",

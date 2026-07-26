@@ -8,6 +8,15 @@ equipment, schedule, and preferred session length.
 
 **[View my portfolio](https://ahsanrehmat1.github.io)**
 
+## Download PulsePlan
+
+**[Download PulsePlan v0.19.0 for Android](https://github.com/ahsanrehmat1/PulsePlan/releases/download/v0.19.0/PulsePlan-v0.19.0.apk)**
+
+This signed public beta supports Android 8.0 and newer. Because it is
+distributed directly through GitHub rather than Google Play, Android may ask
+you to allow installation from your browser or file manager. The matching
+SHA-256 checksum is included with the release.
+
 <p align="center">
   <img
     src="docs/images/pulseplan-dashboard.png"
