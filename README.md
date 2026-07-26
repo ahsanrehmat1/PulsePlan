@@ -18,6 +18,8 @@ New to the project? Start with my plain-language
 - Email verification status with send, resend, and refresh controls
 - Account & Privacy center with plain-language data-use information
 - Provider-confirmed account and data deletion
+- Firebase Crashlytics reporting for crashes, ANRs, and non-fatal errors
+- Public privacy policy and account-deletion request pages
 - Timestamped offline-first Firestore sync for profiles, reminders, progress,
   exercise results, and exercise alternatives
 - Clear cloud-backup status
@@ -59,13 +61,17 @@ New to the project? Start with my plain-language
 - Android Gradle Plugin 9.3.1
 - Gradle 9.6.1
 
-I do not commit secrets to this repository. Version 0.18.0 is connected on the
+I do not commit secrets to this repository. Version 0.19.0 is connected on the
 current development machine to the Firebase project `pulseplan-503519`.
 Email/password registration, sign-out and sign-in, password-reset dispatch,
 Firestore upload, and profile restoration after clearing all local app data
-have been verified on a clean emulator. Version 0.18.0 adds Google Sign-In and
-provider-aware account deletion. A final destructive deletion test should use
-a disposable account before release.
+have been verified on a clean emulator. Google Sign-In and provider-aware
+account deletion are also working on a physical Android device. Version 0.19.0
+adds Crashlytics and public Play Store policy pages. A final destructive
+deletion test should use a disposable account before release.
+
+- [Privacy policy](https://ahsanrehmat1.github.io/pulseplan-privacy.html)
+- [Account deletion](https://ahsanrehmat1.github.io/pulseplan-delete-account.html)
 
 To connect another development machine or Firebase project, create a Firebase
 Android app whose package is

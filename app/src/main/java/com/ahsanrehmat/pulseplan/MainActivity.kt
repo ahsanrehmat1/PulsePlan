@@ -19,6 +19,17 @@ class MainActivity : ComponentActivity() {
                 PulsePlanApp(viewModel = viewModel)
             }
         }
+        if (
+            BuildConfig.DEBUG &&
+            intent.getBooleanExtra(CRASHLYTICS_TEST_EXTRA, false)
+        ) {
+            window.decorView.post {
+                error("PulsePlan Crashlytics verification")
+            }
+        }
+    }
+
+    private companion object {
+        const val CRASHLYTICS_TEST_EXTRA = "crashlytics_test"
     }
 }
-

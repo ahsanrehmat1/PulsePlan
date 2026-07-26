@@ -3,6 +3,7 @@ import java.util.Properties
 
 plugins {
     id("com.android.application")
+    id("com.google.firebase.crashlytics")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
 }
@@ -26,14 +27,17 @@ android {
         applicationId = "com.ahsanrehmat.pulseplan"
         minSdk = 26
         targetSdk = 36
-        versionCode = 18
-        versionName = "0.18.0"
+        versionCode = 19
+        versionName = "0.19.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         buildConfigField("String", "FIREBASE_API_KEY", "\"${localValue("firebase.apiKey")}\"")
         buildConfigField("String", "FIREBASE_APP_ID", "\"${localValue("firebase.appId")}\"")
         buildConfigField("String", "FIREBASE_PROJECT_ID", "\"${localValue("firebase.projectId")}\"")
+        resValue("string", "google_api_key", localValue("firebase.apiKey"))
+        resValue("string", "google_app_id", localValue("firebase.appId"))
+        resValue("string", "project_id", localValue("firebase.projectId"))
         buildConfigField(
             "String",
             "GOOGLE_WEB_CLIENT_ID",
@@ -92,6 +96,7 @@ dependencies {
 
     implementation(platform("com.google.firebase:firebase-bom:34.16.0"))
     implementation("com.google.firebase:firebase-auth")
+    implementation("com.google.firebase:firebase-crashlytics")
     implementation("com.google.firebase:firebase-firestore")
     implementation("androidx.credentials:credentials:1.3.0")
     implementation("androidx.credentials:credentials-play-services-auth:1.3.0")

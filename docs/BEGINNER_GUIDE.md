@@ -25,8 +25,8 @@ The three most important product areas are:
 - Daily reminders and a history of the user's activity and progress.
 
 PulsePlan requires an account and uses the internet for cloud backup. Version
-0.18.0 supports Google and email/password accounts, cloud backup,
-email-verification controls, and account/privacy management.
+0.19.0 supports Google and email/password accounts, cloud backup,
+email-verification controls, account/privacy management, and crash reporting.
 
 ## 2. Why Android, Kotlin, and Jetpack Compose
 
@@ -512,7 +512,7 @@ When an error appears:
 ## 13. Connecting real accounts with Firebase
 
 Version 0.16.0 connected PulsePlan to the real `pulseplan-503519` Firebase
-project. Version 0.18.0 adds Google Sign-In.
+project. Version 0.18.0 added Google Sign-In. Version 0.19.0 adds Crashlytics.
 
 The broad process is:
 
@@ -628,6 +628,8 @@ Build in this order so later work rests on a stable base:
 - Password-reauthenticated account, cloud-data, local-cache, and reminder
   deletion completed in version 0.17.0.
 - Google Sign-In and provider-aware deletion completed in version 0.18.0.
+- Crashlytics integration and public privacy/deletion pages completed in
+  version 0.19.0.
 
 ### Phase 3: better workout experience
 
@@ -662,8 +664,8 @@ Build in this order so later work rests on a stable base:
 ### Phase 5: production release
 
 - Accessibility review.
-- Publish the final web privacy-policy URL and complete the disposable-account
-  deletion test.
+- Public privacy-policy and account-deletion pages completed in version 0.19.0.
+- Complete the disposable-account deletion test.
 - Security review.
 - Real-device testing on multiple Android versions and screen sizes.
 - Release signing, optimized release build, store listing, and staged rollout.

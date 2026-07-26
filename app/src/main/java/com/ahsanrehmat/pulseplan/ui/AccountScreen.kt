@@ -59,6 +59,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -75,6 +76,10 @@ import com.ahsanrehmat.pulseplan.ui.theme.Warm
 import kotlinx.coroutines.launch
 
 private val Danger = Color(0xFFB3261E)
+private const val PRIVACY_POLICY_URL =
+    "https://ahsanrehmat1.github.io/pulseplan-privacy.html"
+private const val ACCOUNT_DELETION_URL =
+    "https://ahsanrehmat1.github.io/pulseplan-delete-account.html"
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -419,6 +424,8 @@ private fun AccountSecurityCard(
 
 @Composable
 private fun PrivacyInformationCard() {
+    val uriHandler = LocalUriHandler.current
+
     Card(
         colors = CardDefaults.cardColors(containerColor = Color.White),
         shape = RoundedCornerShape(22.dp),
@@ -445,6 +452,23 @@ private fun PrivacyInformationCard() {
                 title = "Your choice",
                 body = "You can sign out or delete your account at any time.",
             )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                TextButton(
+                    onClick = { uriHandler.openUri(PRIVACY_POLICY_URL) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Privacy policy")
+                }
+                TextButton(
+                    onClick = { uriHandler.openUri(ACCOUNT_DELETION_URL) },
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text("Deletion help")
+                }
+            }
         }
     }
 }

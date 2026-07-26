@@ -4,11 +4,13 @@ import android.app.Application
 import com.ahsanrehmat.pulseplan.notifications.WorkoutReminder
 import com.google.firebase.FirebaseApp
 import com.google.firebase.FirebaseOptions
+import com.google.firebase.crashlytics.FirebaseCrashlytics
 
 class PulsePlanApplication : Application() {
     override fun onCreate() {
         super.onCreate()
         initializeFirebaseIfConfigured()
+        configureCrashReporting()
         WorkoutReminder.createChannel(this)
     }
 
@@ -28,5 +30,15 @@ class PulsePlanApplication : Application() {
             FirebaseApp.initializeApp(this, options)
         }
     }
-}
 
+    private fun configureCrashReporting() {
+        if (FirebaseApp.getApps(this).isEmpty()) return
+
+        FirebaseCrashlytics.getInstance().apply {
+            setCrashlyticsCollectionEnabled(true)
+            setCustomKey("app_version", BuildConfig.VERSION_NAME)
+            setCustomKey("build_type", BuildConfig.BUILD_TYPE)
+            log("PulsePlan started")
+        }
+    }
+}
