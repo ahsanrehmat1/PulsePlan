@@ -62,8 +62,9 @@ a substitute for a qualified clinician or coach.
 
 Items 1, 17, 18, and 25 depend on Firebase. Registration, sign-in,
 password-reset dispatch, Firestore upload, and clean-app restoration are
-verified on the configured development project. The destructive deletion path
-must receive a final end-to-end test with a disposable account before release.
+verified on the configured development project. Disposable-account deletion is
+also verified end to end across Authentication, Firestore, local data, and
+scheduled work.
 
 ## Next releases
 

@@ -120,9 +120,9 @@ The app currently includes:
 - Profiles and workout data remain available locally and are backed up to
   Firestore for signed-in users. A clean-app restore test has verified that the
   saved profile returns after local app data is removed.
-- Email-verification and account/data-deletion clients are implemented. Use a
-  disposable Firebase account for the final destructive end-to-end deletion
-  test before release.
+- Email verification and account/data deletion are implemented.
+  Disposable-account deletion was verified end to end across Authentication,
+  Firestore, local data, and scheduled work.
 - Structured movement preferences automatically filter known movement demands.
   The optional free-text note is saved for the user's reference and is not
   interpreted as a diagnosis or as an automatic medical restriction.
@@ -131,7 +131,8 @@ The app currently includes:
   video content or videos recorded and owned by the app team.
 - There are unit tests for plan generation, reminder scheduling, and workout
   session behavior, but no automated Compose UI tests yet.
-- The release build has not been prepared for the Google Play Store.
+- The release App Bundle builds successfully. Secure release signing and Play
+  Console preparation are still required.
 
 ## 5. How the app works internally
 
@@ -630,6 +631,8 @@ Build in this order so later work rests on a stable base:
 - Google Sign-In and provider-aware deletion completed in version 0.18.0.
 - Crashlytics integration and public privacy/deletion pages completed in
   version 0.19.0. A controlled fatal report was verified from an SM-N986N.
+- Disposable-account deletion was verified end to end on an isolated Android
+  16 emulator.
 
 ### Phase 3: better workout experience
 
@@ -665,7 +668,7 @@ Build in this order so later work rests on a stable base:
 
 - Accessibility review.
 - Public privacy-policy and account-deletion pages completed in version 0.19.0.
-- Complete the disposable-account deletion test.
+- Disposable-account deletion test completed.
 - Security review.
 - Real-device testing on multiple Android versions and screen sizes.
 - Release signing, optimized release build, store listing, and staged rollout.

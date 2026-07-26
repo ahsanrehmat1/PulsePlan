@@ -11,7 +11,12 @@
   https://ahsanrehmat1.github.io/pulseplan-delete-account.html
 - Firebase Crashlytics SDK
 - Controlled Crashlytics report verified from an SM-N986N
+- Disposable account deletion verified across Authentication, Firestore, local
+  data, and scheduled work on an isolated Android 16 emulator
+- Authentication screen verified at 1.3x text on a compact 720 x 1280 layout;
+  the Google sign-in button now grows instead of clipping its label
 - Unit tests, debug APK build, and Android lint
+- Release Android App Bundle build succeeds
 
 ## Data safety notes
 
@@ -33,7 +38,6 @@ included SDKs before submitting.
 
 ## Before internal testing
 
-- Delete one disposable account end to end
 - Test offline launch, sign-in errors, and cloud recovery
 - Test TalkBack, large text, and a small screen
 - Create and securely back up the release signing key

@@ -9,6 +9,7 @@ import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
+import androidx.credentials.exceptions.NoCredentialException
 import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
@@ -52,6 +53,8 @@ internal suspend fun requestGoogleIdToken(
         }
     } catch (_: GetCredentialCancellationException) {
         GoogleCredentialOutcome.Cancelled
+    } catch (_: NoCredentialException) {
+        GoogleCredentialOutcome.Error("No Google account is available.")
     } catch (_: GoogleIdTokenParsingException) {
         GoogleCredentialOutcome.Error("Google sign-in returned an invalid response.")
     } catch (error: GetCredentialException) {

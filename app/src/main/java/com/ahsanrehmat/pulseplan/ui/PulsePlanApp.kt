@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -372,7 +373,7 @@ private fun AuthScreen(
                     enabled = !state.isBusy && !isGooglePromptOpen,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(54.dp),
+                        .heightIn(min = 54.dp),
                     shape = RoundedCornerShape(16.dp),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.White,
@@ -389,7 +390,10 @@ private fun AuthScreen(
                             strokeWidth = 2.dp,
                         )
                     } else {
-                        Text("Continue with Google")
+                        Text(
+                            text = "Continue with Google",
+                            textAlign = TextAlign.Center,
+                        )
                     }
                 }
             }
@@ -475,7 +479,7 @@ private fun AuthScreen(
                 onClick = ::submit,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(54.dp),
+                    .heightIn(min = 54.dp),
                 enabled = !state.isBusy,
                 colors = ButtonDefaults.buttonColors(
                     containerColor = PulseGreen,
